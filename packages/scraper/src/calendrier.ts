@@ -1,34 +1,21 @@
 import { creerLogger } from '@forex/logger';
-import type { EvenementEconomique } from '../types.js';
+import type { EvenementEconomique } from './types.js';
 
 const log = creerLogger({ module: 'scraper:calendrier' });
 
-/**
- * Calendrier économique depuis ForexFactory (source publique gratuite).
- * Utilisé pour détecter les annonces à venir et éviter les trades risqués.
- *
- * IMPORTANT: Respecter les CGU de ForexFactory. Usage personnel uniquement.
- * Alternative API gratuite: https://nfs.faireconomy.media/ff_calendar_thisweek.json
- */
 export class ScraperCalendrierEconomique {
   private readonly urlApi: string;
   private cache: { donnees: EvenementEconomique[]; expiresAt: number } | null = null;
 
   constructor() {
-    // API JSON non officielle mais stable de ForexFactory
     this.urlApi = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
   }
 
-  /**
-   * Récupère les événements économiques de la semaine en cours.
-   * Cache de 30 minutes pour éviter les requêtes excessives.
-   */
   async obtenirEvenementsSemaine(
     options: { impact?: 'fort' | 'moyen' | 'faible' | null } = {}
   ): Promise<EvenementEconomique[]> {
     const maintenant = Date.now();
 
-    // Retourner le cache si valide (30 minutes)
     if (this.cache && this.cache.expiresAt > maintenant) {
       log.debug('Calendrier depuis cache');
       return this.filtrerParImpact(this.cache.donnees, options.impact);
@@ -41,9 +28,7 @@ export class ScraperCalendrierEconomique {
         signal: AbortSignal.timeout(10_000),
       });
 
-      if (!reponse.ok) {
-        throw new Error(`Calendrier HTTP ${reponse.status}`);
-      }
+      if (!reponse.ok) throw new Error(`Calendrier HTTP ${reponse.status}`);
 
       const donneesBrutes = (await reponse.json()) as Array<{
         title: string;
@@ -68,9 +53,7 @@ export class ScraperCalendrierEconomique {
         valeurActuelle: evt.actual || null,
       }));
 
-      // Mettre en cache 30 minutes
       this.cache = { donnees: evenements, expiresAt: maintenant + 30 * 60 * 1000 };
-
       log.info({ count: evenements.length }, 'Calendrier récupéré');
       return this.filtrerParImpact(evenements, options.impact);
     } catch (err) {
@@ -80,10 +63,6 @@ export class ScraperCalendrierEconomique {
     }
   }
 
-  /**
-   * Vérifie si des annonces à fort impact sont prévues dans les prochaines minutes.
-   * Utilisé par l'agent Exécuteur pour éviter les trades dangereux.
-   */
   async annoncesImminentes(
     devisesAEviter: string[],
     fenetreMinutes: number = 30
@@ -94,7 +73,7 @@ export class ScraperCalendrierEconomique {
 
     return evenements.filter((evt) => {
       const dateEvt = new Date(`${evt.date}T${evt.heure}:00Z`);
-      const devisesConcernees = evt.devises.some((d) =>
+      const devisesConcernees = evt.devises.some((d: string) =>
         devisesAEviter.some((da) => da.includes(d))
       );
       return devisesConcernees && dateEvt >= maintenant && dateEvt <= limite;

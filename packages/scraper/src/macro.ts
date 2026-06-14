@@ -1,12 +1,10 @@
 import { creerLogger } from '@forex/logger';
-import type { IndicateurMacro } from '../types.js';
+import type { IndicateurMacro } from './types.js';
 
 const log = creerLogger({ module: 'scraper:macro' });
 
-/**
- * Indicateurs macro-économiques depuis FRED (Federal Reserve Bank of St. Louis).
- * API 100% gratuite, clé gratuite sur fred.stlouisfed.org.
- */
+type MetaIndicateur = { nom: string; pays: string; devise: string; unite: string };
+
 export class ScraperIndicateursMacro {
   private readonly urlBase = 'https://api.stlouisfed.org/fred/series/observations';
   private readonly cleApi: string | undefined;
@@ -19,13 +17,9 @@ export class ScraperIndicateursMacro {
     return Boolean(this.cleApi);
   }
 
-  /**
-   * Récupère un indicateur FRED (ex: CPIAUCSL = inflation US, GDP = PIB).
-   * Voir: https://fred.stlouisfed.org/categories
-   */
   async obtenirIndicateur(
     seriesId: string,
-    meta: { nom: string; pays: string; devise: string; unite: string }
+    meta: MetaIndicateur
   ): Promise<IndicateurMacro | null> {
     if (!this.cleApi) {
       log.warn('FRED_API_KEY non configurée');
@@ -71,16 +65,12 @@ export class ScraperIndicateursMacro {
     }
   }
 
-  /**
-   * Récupère un paquet d'indicateurs clés pour les devises majeures.
-   * Utilisé pour enrichir le contexte RAG avec des données fondamentales.
-   */
   async obtenirIndicateursUSD(): Promise<IndicateurMacro[]> {
-    const series: Array<[string, Omit<IndicateurMacro, 'code' | 'valeur' | 'date' | 'source'>]> = [
+    const series: Array<[string, MetaIndicateur]> = [
       ['CPIAUCSL', { nom: 'Inflation US (CPI)', pays: 'États-Unis', devise: 'USD', unite: '%' }],
-      ['UNRATE', { nom: 'Taux de chômage US', pays: 'États-Unis', devise: 'USD', unite: '%' }],
-      ['FEDFUNDS', { nom: 'Taux directeur Fed', pays: 'États-Unis', devise: 'USD', unite: '%' }],
-      ['GDP', { nom: 'PIB US', pays: 'États-Unis', devise: 'USD', unite: 'Mds$' }],
+      ['UNRATE',   { nom: 'Taux de chômage US', pays: 'États-Unis', devise: 'USD', unite: '%' }],
+      ['FEDFUNDS', { nom: 'Taux directeur Fed',  pays: 'États-Unis', devise: 'USD', unite: '%' }],
+      ['GDP',      { nom: 'PIB US',              pays: 'États-Unis', devise: 'USD', unite: 'Mds$' }],
     ];
 
     const resultats = await Promise.allSettled(
