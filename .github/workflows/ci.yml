@@ -27,7 +27,8 @@ jobs:
           cache: 'pnpm'
 
       - name: Installer les dépendances
-        run: pnpm install --frozen-lockfile
+        # --no-frozen-lockfile jusqu'à ce que pnpm-lock.yaml soit commis
+        run: pnpm install --no-frozen-lockfile
 
       - name: Vérification des types
         run: pnpm type-check
@@ -36,7 +37,6 @@ jobs:
         run: pnpm test
         env:
           NODE_ENV: test
-          # Variables factices pour les tests (pas de clés réelles en CI)
           OPENAI_API_KEY: sk-test-factice
           AI_PROVIDER: openai
           LOG_LEVEL: error
