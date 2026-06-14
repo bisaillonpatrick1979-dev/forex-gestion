@@ -17,6 +17,8 @@
     "@forex/logger": "workspace:*",
     "@forex/oanda-client": "workspace:*",
     "@forex/rag": "workspace:*",
+    "@forex/scraper": "workspace:*",
+    "@forex/supabase": "workspace:*",
     "next": "^15.1.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
