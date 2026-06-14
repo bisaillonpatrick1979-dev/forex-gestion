@@ -1,19 +1,43 @@
 # Forex Gestion — Système Multi-Agents IA
 
-Système de gestion forex automatisé avec agents IA, intégration OANDA et RAG.
+Plateforme de trading forex automatisée avec 3 agents IA spécialisés, intégration OANDA v20,
+base vectorielle pgvector et scraping de données macro.
 
 ## Architecture
 
 ```
 forex-gestion/
 ├── apps/
-│   └── web/              # Interface Next.js (déployée sur Vercel)
+│   └── web/              # Next.js 15 — déployé sur Vercel
 └── packages/
-    ├── api-switcher/     # Routeur multi-fournisseurs IA (OpenAI/Anthropic/Gemini/Ollama)
-    ├── agents/           # Agents IA spécialisés (Analyste/Gestionnaire/Exécuteur)
-    ├── oanda-client/     # Client OANDA REST + Streaming
-    ├── rag/              # RAG avec embeddings (stub → Ollama local)
-    └── logger/           # Logging structuré (Pino)
+    ├── logger/           # Logging structuré (Pino)
+    ├── api-switcher/     # Routeur IA pluggable (OpenAI/Anthropic/Gemini/Ollama)
+    ├── oanda-client/     # Client OANDA v20 REST + Streaming
+    ├── agents/           # 3 agents IA (Analyste/Gestionnaire/Exécuteur)
+    ├── rag/              # Embeddings OpenAI → swap Ollama/Nomic
+    ├── supabase/         # pgvector + persistance trades
+    └── scraper/          # Calendrier macro + actualités + indicateurs FRED
+```
+
+## Pipeline des agents
+
+```
+OANDA (bougies) + Calendrier macro
+         │
+         ▼
+  [Agent 1: Analyste Technique]
+  Direction + Confiance + Niveaux clés
+         │ (si confiance ≥ 60%)
+         ▼
+  [Agent 2: Gestionnaire des Risques]
+  Taille position + Stop Loss + Take Profit
+         │
+         ▼
+  [Agent 3: Exécuteur]
+  EXECUTER | ATTENDRE | REJETER
+         │
+         ▼
+  Supabase (persistance signal + trade)
 ```
 
 ## Démarrage rapide
@@ -22,40 +46,61 @@ forex-gestion/
 # Prérequis: Node 20+, pnpm 9+
 npm install -g pnpm
 
-# Installation
+# 1. Cloner et installer
+git clone https://github.com/bisaillonpatrick1979-dev/forex-gestion
+cd forex-gestion
 pnpm install
 
-# Configuration
+# 2. Configurer les variables d'environnement
 cp .env.local.example .env.local
-# Remplir les clés API dans .env.local
+# Éditer .env.local avec tes clés API
 
-# Développement
+# 3. Lancer la migration Supabase
+# Copier-coller packages/supabase/migrations/001_init_pgvector.sql
+# dans Supabase Dashboard > SQL Editor
+
+# 4. Développement
 pnpm dev
 
-# Tests
+# 5. Tests
 pnpm test
-
-# Build production
-pnpm build
 ```
-
-## Fournisseurs IA supportés
-
-| Fournisseur | Modèle par défaut | Tier gratuit |
-|-------------|-------------------|-------------|
-| OpenAI | gpt-4o-mini | Oui (limité) |
-| Anthropic | claude-haiku-4-5 | Oui (dev) |
-| Google Gemini | gemini-1.5-flash | Oui |
-| Ollama | nomic-embed-text | Local |
 
 ## Déploiement Vercel
 
-Chaque push sur `main` déclenche un déploiement automatique.
-Configurer les variables d'environnement dans le dashboard Vercel.
+1. Connecter le repo sur [vercel.com](https://vercel.com)
+2. Framework: **Next.js**
+3. Root directory: `apps/web`
+4. Build command: `cd ../.. && pnpm build`
+5. Ajouter les variables d'environnement dans Vercel Dashboard
 
-## Phases de développement
+## Clés API nécessaires (toutes gratuites)
 
-- **Semaine 1-2**: Monorepo + multi-API switcher + OANDA de base
-- **Semaine 2-3**: Agents IA + RAG Supabase (embeddings mock)
-- **Semaine 3+**: Scrapers, fine-tuning, déploiement Vercel
-- **Après PC**: Ollama local, paper trading live, boucle de rétroaction
+| Service | Tier gratuit | Lien |
+|---------|-------------|------|
+| OpenAI | Oui (limité) | [platform.openai.com](https://platform.openai.com) |
+| Anthropic | Oui (dev) | [console.anthropic.com](https://console.anthropic.com) |
+| Google Gemini | Oui (généreux) | [aistudio.google.com](https://aistudio.google.com) |
+| OANDA | Compte practice gratuit | [oanda.com](https://www.oanda.com) |
+| Supabase | 500 MB gratuit | [supabase.com](https://supabase.com) |
+| NewsAPI | 1000 req/jour gratuit | [newsapi.org](https://newsapi.org) |
+| FRED | Illimité gratuit | [fred.stlouisfed.org](https://fred.stlouisfed.org) |
+
+## Feuille de route
+
+- [x] **Semaine 1-2**: Monorepo + API switcher + OANDA + 3 agents
+- [x] **Semaine 2-3**: Supabase pgvector + RAG + scraper macro
+- [ ] **Semaine 3+**: Dashboard UI temps réel + paper trading boucle
+- [ ] **Après PC**: Ollama local (swap zero-code), fine-tuning, feedback loop
+
+## Routes API disponibles
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/api/health` | Statut système |
+| POST | `/api/agents/pipeline` | Pipeline complet 3-agents |
+| POST | `/api/agents/analyser` | Analyse technique seule |
+| GET | `/api/oanda/compte` | Informations compte OANDA |
+| GET | `/api/oanda/bougies/[paire]` | Historique bougies |
+| GET | `/api/trades` | Historique trades (Supabase) |
+| GET | `/api/calendrier` | Événements économiques semaine |
