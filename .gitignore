@@ -1,0 +1,40 @@
+# Dépendances
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+.next/
+out/
+build/
+coverage/
+
+# Environnement (NE JAMAIS committer)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Vercel
+.vercel
+
+# Turbo
+.turbo/
+
+# Vitest
+coverage/

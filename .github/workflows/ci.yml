@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: Build & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Installer les dépendances
+        run: pnpm install --frozen-lockfile
+
+      - name: Vérification des types
+        run: pnpm type-check
+
+      - name: Tests unitaires
+        run: pnpm test
+        env:
+          NODE_ENV: test
+          # Variables factices pour les tests (pas de clés réelles en CI)
+          OPENAI_API_KEY: sk-test-factice
+          AI_PROVIDER: openai
+          LOG_LEVEL: error
+
+      - name: Build
+        run: pnpm build
+        env:
+          NODE_ENV: production
+          OPENAI_API_KEY: sk-test-factice
+          AI_PROVIDER: openai

@@ -1,0 +1,32 @@
+{
+  "name": "@forex/agents",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agents IA spécialisés: Analyste Technique, Gestionnaire des Risques, Exécuteur",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist coverage"
+  },
+  "dependencies": {
+    "@forex/api-switcher": "workspace:*",
+    "@forex/logger": "workspace:*",
+    "@forex/oanda-client": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.9"
+  }
+}
